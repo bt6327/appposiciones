@@ -1,7 +1,9 @@
+
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-export function Card({ card, deleteCard }: { card: { id: any, content: any }, deleteCard: (id: any) => void}) {
+
+export function Card({ card, deleteCard }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: card.id,
     data: {
@@ -9,6 +11,7 @@ export function Card({ card, deleteCard }: { card: { id: any, content: any }, de
       card,
     },
   });
+
 
   const style = {
     transform: CSS.Transform.toString(transform),

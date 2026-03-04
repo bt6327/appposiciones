@@ -3,7 +3,7 @@
 
 import { useState, useMemo, ReactNode } from 'react';
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
-
+const valuerow= 5;
 function Draggable({ id, data, children }: { id: any, data: any, children: ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
@@ -256,7 +256,7 @@ export default function Home() {
               <p className="text-gray-600">Ingrese los nombres de los asistentes</p>
             </div>
             <div className="relative mb-6">
-              <textarea id="attendees" className="peer w-full rounded-md border border-gray-300 p-4 text-lg text-gray-800 placeholder-transparent focus:border-blue-500 focus:outline-none" placeholder="Participantes" rows="5" onChange={handleAttendeesChange} value={attendees}></textarea>
+              <textarea id="attendees" className="peer w-full rounded-md border border-gray-300 p-4 text-lg text-gray-800 placeholder-transparent focus:border-blue-500 focus:outline-none" placeholder="Participantes" rows= {valuerow} onChange={handleAttendeesChange} value={attendees}></textarea>
               <label htmlFor="attendees" className="absolute -top-3.5 left-3 bg-white px-1 text-sm text-gray-600 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:-top-3.5 peer-focus:text-sm peer-focus:text-blue-500">Participantes (uno por línea)</label>
             </div>
             <div className="flex space-x-4">
