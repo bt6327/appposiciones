@@ -1,7 +1,7 @@
-
 import { useDroppable } from '@dnd-kit/core';
+import { ReactNode } from 'react';
 
-export function Column({ column, addCard, children }) {
+export function Column({ column, addCard, children }: { column: { id: any, title: any }, addCard: (id: any) => void, children: ReactNode }) {
   const { setNodeRef } = useDroppable({
     id: column.id,
     data: {
