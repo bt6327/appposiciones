@@ -38,12 +38,19 @@ function Droppable({ id, children }: { id: any, children: ReactNode }) {
   );
 }
 
+interface Assignments {
+  [key: string]: {
+    [key: string]: string;
+  };
+}
+
 export default function Home() {
   const [numberOfTables, setNumberOfTables] = useState(0);
   const [tableData, setTableData] = useState<any[]>([]);
   const [attendees, setAttendees] = useState('');
-  const [assignments, setAssignments] = useState<any>({});
+  const [assignments, setAssignments] = useState<Assignments>({});
   const [isDragging, setIsDragging] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const totalSeats = useMemo(() => {
     return tableData.reduce((total, table) => total + (table.seats - 1), 0);
@@ -89,7 +96,61 @@ export default function Home() {
     });
 
     setAssignments(newAssignments);
+    setShowConfirmation(false);
   };
+
+  const updateAttendees = () => {
+    const allAttendees = attendees.split('\n').filter(name => name.trim() !== '');
+    
+    const assignedAttendees = new Set();
+    Object.values(assignments).forEach(table => {
+        Object.values(table).forEach(name => {
+            assignedAttendees.add(name);
+        });
+    });
+
+    const newAttendees = allAttendees.filter(name => !assignedAttendees.has(name));
+
+    const availableSeats: any[] = [];
+    tableData.forEach(table => {
+        for (let i = 0; i < table.seats; i++) {
+            if (i !== 1 && !assignments[table.id]?.[i]) { // Position 2 is for the Crupier and check if seat is empty
+                availableSeats.push({ tableId: table.id, chairIndex: i });
+            }
+        }
+    });
+    
+    if (newAttendees.length > availableSeats.length) {
+        alert("No hay suficientes puestos disponibles para los nuevos participantes.");
+        return;
+    }
+
+    const shuffleArray = (array: any[]) => {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    };
+
+    const shuffledNewAttendees = shuffleArray(newAttendees);
+    const shuffledAvailableSeats = shuffleArray(availableSeats);
+
+    setAssignments((prev: any) => {
+        const newAssignments = JSON.parse(JSON.stringify(prev));
+        shuffledNewAttendees.forEach((attendee, index) => {
+            if (index < shuffledAvailableSeats.length) {
+                const seat = shuffledAvailableSeats[index];
+                if (!newAssignments[seat.tableId]) {
+                    newAssignments[seat.tableId] = {};
+                }
+                newAssignments[seat.tableId][seat.chairIndex] = attendee;
+            }
+        });
+        return newAssignments;
+    });
+  };
+
 
   const handleTableNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const count = parseInt(e.target.value, 10);
@@ -113,8 +174,13 @@ export default function Home() {
     }
   };
 
-  const handleFinalize = () => assignAttendees();
-  const handleUpdate = () => assignAttendees();
+  const handleFinalize = () => {
+    setShowConfirmation(true);
+  };
+
+  const handleCancel = () => {
+    setShowConfirmation(false);
+  };
 
   function handleDragStart() {
     setIsDragging(true);
@@ -184,6 +250,19 @@ export default function Home() {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex min-h-screen flex-col items-center p-4" style={{ backgroundColor: '#f0f8ff' }}>
+        {showConfirmation && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">Confirmar</h2>
+                    <p className="text-gray-600 mb-6">Se sorteara los puestos con los participantes ingresados, si desea solo agregar participantes presione actualizar</p>
+                    <div className="flex justify-end space-x-4">
+                        <button onClick={handleCancel} className="rounded-md bg-gray-300 px-6 py-3 text-lg font-semibold text-gray-800 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">Cancelar</button>
+                        <button onClick={assignAttendees} className="rounded-md bg-blue-500 px-6 py-3 text-lg font-semibold text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Continuar</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <div className="w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg mb-8">
             <div className="relative mb-6 text-center">
                 <h1 className="text-2xl font-bold text-gray-800">Configuración de Mesas</h1>
@@ -261,7 +340,7 @@ export default function Home() {
             </div>
             <div className="flex space-x-4">
               <button onClick={handleFinalize} className="w-full rounded-md bg-blue-500 px-6 py-3 text-lg font-semibold text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50" disabled={attendeeCount > totalSeats}>Finalizar</button>
-              <button onClick={handleUpdate} className="w-full rounded-md bg-green-500 px-6 py-3 text-lg font-semibold text-white shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50" disabled={attendeeCount > totalSeats}>Actualizar</button>
+              <button onClick={updateAttendees} className="w-full rounded-md bg-green-500 px-6 py-3 text-lg font-semibold text-white shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50" disabled={attendeeCount > totalSeats}>Actualizar</button>
             </div>
           </div>
         )}
